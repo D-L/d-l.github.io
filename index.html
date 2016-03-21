@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-US" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keyword" content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>唯有 Nim/Python 加吐槽</title>
+
+ 	
+	<link href="/css/journal.css" rel="stylesheet">
+
+ 	
+ 	<link href="/css/style.css" rel="stylesheet">
+</head>
+<body lang="en">
+	<div class="container">
+		<div class="row">
+			<div class="navbar navbar-default navbar-inverse" role="navigation">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="http://d-l.github.io/">唯有 Nim/Python 加吐槽</a> 
+				</div>
+				<div class="navbar-collapse collapse navbar-responsive-collapse">
+					<ul class="nav navbar-nav navbar-right">
+						<li><a href="http://d-l.github.io/">Home</a></li>
+						<li><a href="http://d-l.github.io//page/about/">About</a></li>
+						<li><a href="http://d-l.github.io//page/resume/">Resume</a></li>
+						<li><a href="http://d-l.github.io//post/">Blog</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="container">
+		
+				
+		<div class="row">
+			<div class="col-md-offset-1 col-md-10">
+				<h3><a href="http://d-l.github.io/post/estp/">estp性能调优</a></h3>
+					<span class="label label-primary">Mon Mar 21, 2016</span> in 
+					 using tags 			 
+					
+				</small>
+			</div>
+		</div>	
+		<div class="row">
+			<div class="col-md-offset-1 col-md-10">
+				<br> 
+				
+
+<h1 id="estp:8c76d99869e6e51c8d4d8a246f15cead">ESTP</h1>
+
+<p>Nim中新增加的性能调优器</p>
+
+<p><a href="http://nim-lang.org/docs/estp.html">http://nim-lang.org/docs/estp.html</a></p>
+
+<ul>
+<li>增加编译条件 <code>--profiler:on --stackTrace:on</code></li>
+<li>代码中引入 <code>import nimprof</code></li>
+</ul>
+
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12">
+				<hr>
+			</div>
+		</div>
+	
+		
+				
+		<div class="row">
+			<div class="col-md-offset-1 col-md-10">
+				<h3><a href="http://d-l.github.io/post/const_let_var/">Nim中Const、Let、Var定义的Table变量的差异</a></h3>
+					<span class="label label-primary">Mon Mar 21, 2016</span> in 
+					 using tags 			 
+					
+				</small>
+			</div>
+		</div>	
+		<div class="row">
+			<div class="col-md-offset-1 col-md-10">
+				<br> 
+				
+
+<h2 id="问题:e39901fec21d19d726835c80cdc530ff">问题</h2>
+
+<p>突然发现如下的Table读写起来超乎想象的慢</p>
+
+<pre><code>const DICT={
+  33153:32951,   34308:34162,   35463:22840,   27656:27617,   28426:28295,   29966:30742,   38928:39044,   40853:40859
+}.toTable
+</code></pre>
+
+<p>但是调用过程极其简单</p>
+
+<pre><code>proc func_const(i : int) : int =
+  if DICT.hasKey(i):
+    return DICT[i]
+  return i
+</code></pre>
+
+<p>测试代码如下:</p>
+
+<pre><code>const i = 100000
+var s = times.cpuTime()
+for x in 1..i:
+  discard func_const(x)
+var e = times.cpuTime()
+echo &quot;Const:&quot;,e-s
+</code></pre>
+
+<p>在我的老本上以<code>debug</code>模式编译后运行耗时<code>0.46秒</code> <strong>疯掉了都</strong>
+在查看nimcache中的源代码后发现，问题出现在&hellip;.卖个关子</p>
+
+<h2 id="基础:e39901fec21d19d726835c80cdc530ff">基础</h2>
+
+<p>我们直到变量定义可以有3种方式，分别是<code>const</code>、<code>let</code>、<code>var</code></p>
+
+<p>这3者的基础逻辑如下:</p>
+
+<ul>
+<li>Const: 不可修改、编译期可确定</li>
+<li>Let  : 只可初始化一次，然后不可读</li>
+<li>Var  : 随时可读可写</li>
+</ul>
+
+<h2 id="实验:e39901fec21d19d726835c80cdc530ff">实验</h2>
+
+<p>我们将上述的变量定义依次替换为<code>const</code>、<code>let</code>和<code>var</code>后发现速度分别为:</p>
+
+<pre><code>Const: 0.460258
+Let:     0.01789299999999999
+Var:    0.01850099999999999
+</code></pre>
+
+<p>很奇怪对不对，应该 <code>Const</code> 最快、<code>Let</code>次之、<code>Var</code>最慢的啊。我们看看对应的<code>.c</code>代码:</p>
+
+<ul>
+<li><code>Const</code> 部分</li>
+</ul>
+
+<pre><code>nimln(16, &quot;a.nim&quot;);
+    {
+        Table136041 LOC3;   //定义的表结构 很轻量的结构体
+        NIM_BOOL LOC4;
+        Table136041 LOC7;
+        memset((void*)(&amp;LOC3), 0, sizeof(LOC3));    //自动初始化LOC3引起的
+        memset((void*)(&amp;LOC3), 0, sizeof(LOC3));    //复制操作引起的
+        genericSeqAssign((&amp;LOC3.data), TMP338, (&amp;NTI136044));  //我去，每次要复制到一个新的表中2
+        LOC3.counter = ((NI) 8);
+        LOC4 = 0;
+        LOC4 = haskey_136519(LOC3, i); 
+        if (!LOC4) goto LA5;   //返回 i 了
+        nimln(17, &quot;a.nim&quot;);
+        memset((void*)(&amp;LOC7), 0, sizeof(LOC7));
+        memset((void*)(&amp;LOC7), 0, sizeof(LOC7));
+        genericSeqAssign((&amp;LOC7.data), TMP338, (&amp;NTI136044));  //又来一次
+        LOC7.counter = ((NI) 8);
+        result = HEX5BHEX5D_136545(LOC7, i); //返回LOC7的指向，则要TMP338的const不变
+        goto BeforeRet;
+    }
+</code></pre>
+
+<p>这么理解吧，const对应的是个 <code>define</code>,因为压根就没有这个变量。因此，每次操作都要复制一份<code>TMP338</code>，确保<code>const语义</code>。
+<code>TMP338</code>就是这个Table对应的数据</p>
+
+<p>上面可见<code>memset</code>都执行了2次，因此可能nim转换c代码时没做全局优化，而是这个优化的过程由C语言编译器来保证了。</p>
+
+<p>如此复制多次能不慢么!</p>
+
+<p>可以看看如下代码的翻译结果,确实是每一个涉及 <code>CONST_DICT</code> 的操作都重新创建了一个新的备份。</p>
+
+<pre><code>proc func_const(i : int) : int =
+  if CONST_DICT.hasKey(i):
+    return CONST_DICT[i]
+
+  if CONST_DICT.hasKey(i+1):
+    return CONST_DICT[i]
+  return i
+</code></pre>
+
+<ul>
+<li><code>Let</code>部分</li>
+</ul>
+
+<pre><code>{
+        NIM_BOOL LOC3;
+        LOC3 = 0;
+        LOC3 = haskey_136519(Letdict_136473, i);   //直接就查询了
+        if (!LOC3) goto LA4;
+        nimln(22, &quot;a.nim&quot;);
+        result = HEX5BHEX5D_136545(Letdict_136473, i);
+        goto BeforeRet;
+}
+</code></pre>
+
+<p><code>Letdict_136473</code> 在一个独立的init过程终被初始化<code>totable_136031(TMP335, 8, (&amp;Letdict_136473));</code></p>
+
+<p>这里 HEX5BHEX5D_136545 返回的就是它的值。
+由于编译器对<code>Let</code>的语义保证和检查，初始化后不纯在对这个变量的修改操作。因此就放心的直接返回结果了。
+所以性能反而最高</p>
+
+<ul>
+<li><code>var</code>部分</li>
+</ul>
+
+<pre><code>{
+        NIM_BOOL LOC3;
+        NI* LOC6;
+        LOC3 = 0;
+        LOC3 = haskey_136519(Vardict_136513, i);
+        if (!LOC3) goto LA4;
+        nimln(27, &quot;a.nim&quot;);
+        LOC6 = 0;
+        LOC6 = HEX5BHEX5D_136657((&amp;Vardict_136513), i);
+        result = (*LOC6);
+        goto BeforeRet;
+}
+</code></pre>
+
+<p><code>Vardict_136513</code> 在一个独立的init过程终被初始化<code>totable_136031(TMP335, 8, (&amp;Vardict_136513));</code></p>
+
+<p>因为<code>var</code>的原语，所以必须返回的是一个指针了。
+因此<code>HEX5BHEX5D_136657</code>返回的是一个指针的指针,因此必须 <code>(*)</code>了。</p>
+
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12">
+				<hr>
+			</div>
+		</div>
+	
+		
+	</div>
+  <div class="container">
+    <div class="row col-md-12">
+          <footer>
+            <div>
+                <p>
+                    &copy; 2014  ~ Powered By <a href="http://hugo.spf13.com">Hugo</a>
+                </p>
+            </div>
+            </footer>
+        </div>
+    </div>
+
+    
+    
+    <script src="/js/jquery-min-2.1.1.js"></script>
+    <script src="/js/bootstrap.min-3.1.1.js"></script>
+    </body>
+</html>

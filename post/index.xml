@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on 唯有 Nim/Python 加吐槽</title>
+    <link>http://d-l.github.io/post/</link>
+    <description>Recent content in Posts on 唯有 Nim/Python 加吐槽</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 21 Mar 2016 19:42:43 +0800</lastBuildDate>
+    <atom:link href="http://d-l.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>estp性能调优</title>
+      <link>http://d-l.github.io/post/estp/</link>
+      <pubDate>Mon, 21 Mar 2016 19:42:43 +0800</pubDate>
+      
+      <guid>http://d-l.github.io/post/estp/</guid>
+      <description>
+
+&lt;h1 id=&#34;estp:8c76d99869e6e51c8d4d8a246f15cead&#34;&gt;ESTP&lt;/h1&gt;
+
+&lt;p&gt;Nim中新增加的性能调优器&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://nim-lang.org/docs/estp.html&#34;&gt;http://nim-lang.org/docs/estp.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;增加编译条件 &lt;code&gt;--profiler:on --stackTrace:on&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;代码中引入 &lt;code&gt;import nimprof&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Nim中Const、Let、Var定义的Table变量的差异</title>
+      <link>http://d-l.github.io/post/const_let_var/</link>
+      <pubDate>Mon, 21 Mar 2016 19:42:40 +0800</pubDate>
+      
+      <guid>http://d-l.github.io/post/const_let_var/</guid>
+      <description>
+
+&lt;h2 id=&#34;问题:e39901fec21d19d726835c80cdc530ff&#34;&gt;问题&lt;/h2&gt;
+
+&lt;p&gt;突然发现如下的Table读写起来超乎想象的慢&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;const DICT={
+  33153:32951,   34308:34162,   35463:22840,   27656:27617,   28426:28295,   29966:30742,   38928:39044,   40853:40859
+}.toTable
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;但是调用过程极其简单&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;proc func_const(i : int) : int =
+  if DICT.hasKey(i):
+    return DICT[i]
+  return i
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;测试代码如下:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;const i = 100000
+var s = times.cpuTime()
+for x in 1..i:
+  discard func_const(x)
+var e = times.cpuTime()
+echo &amp;quot;Const:&amp;quot;,e-s
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;在我的老本上以&lt;code&gt;debug&lt;/code&gt;模式编译后运行耗时&lt;code&gt;0.46秒&lt;/code&gt; &lt;strong&gt;疯掉了都&lt;/strong&gt;
+在查看nimcache中的源代码后发现，问题出现在&amp;hellip;.卖个关子&lt;/p&gt;
+
+&lt;h2 id=&#34;基础:e39901fec21d19d726835c80cdc530ff&#34;&gt;基础&lt;/h2&gt;
+
+&lt;p&gt;我们直到变量定义可以有3种方式，分别是&lt;code&gt;const&lt;/code&gt;、&lt;code&gt;let&lt;/code&gt;、&lt;code&gt;var&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;这3者的基础逻辑如下:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Const: 不可修改、编译期可确定&lt;/li&gt;
+&lt;li&gt;Let  : 只可初始化一次，然后不可读&lt;/li&gt;
+&lt;li&gt;Var  : 随时可读可写&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;实验:e39901fec21d19d726835c80cdc530ff&#34;&gt;实验&lt;/h2&gt;
+
+&lt;p&gt;我们将上述的变量定义依次替换为&lt;code&gt;const&lt;/code&gt;、&lt;code&gt;let&lt;/code&gt;和&lt;code&gt;var&lt;/code&gt;后发现速度分别为:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Const: 0.460258
+Let:     0.01789299999999999
+Var:    0.01850099999999999
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很奇怪对不对，应该 &lt;code&gt;Const&lt;/code&gt; 最快、&lt;code&gt;Let&lt;/code&gt;次之、&lt;code&gt;Var&lt;/code&gt;最慢的啊。我们看看对应的&lt;code&gt;.c&lt;/code&gt;代码:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Const&lt;/code&gt; 部分&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code&gt;nimln(16, &amp;quot;a.nim&amp;quot;);
+    {
+        Table136041 LOC3;   //定义的表结构 很轻量的结构体
+        NIM_BOOL LOC4;
+        Table136041 LOC7;
+        memset((void*)(&amp;amp;LOC3), 0, sizeof(LOC3));    //自动初始化LOC3引起的
+        memset((void*)(&amp;amp;LOC3), 0, sizeof(LOC3));    //复制操作引起的
+        genericSeqAssign((&amp;amp;LOC3.data), TMP338, (&amp;amp;NTI136044));  //我去，每次要复制到一个新的表中2
+        LOC3.counter = ((NI) 8);
+        LOC4 = 0;
+        LOC4 = haskey_136519(LOC3, i); 
+        if (!LOC4) goto LA5;   //返回 i 了
+        nimln(17, &amp;quot;a.nim&amp;quot;);
+        memset((void*)(&amp;amp;LOC7), 0, sizeof(LOC7));
+        memset((void*)(&amp;amp;LOC7), 0, sizeof(LOC7));
+        genericSeqAssign((&amp;amp;LOC7.data), TMP338, (&amp;amp;NTI136044));  //又来一次
+        LOC7.counter = ((NI) 8);
+        result = HEX5BHEX5D_136545(LOC7, i); //返回LOC7的指向，则要TMP338的const不变
+        goto BeforeRet;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这么理解吧，const对应的是个 &lt;code&gt;define&lt;/code&gt;,因为压根就没有这个变量。因此，每次操作都要复制一份&lt;code&gt;TMP338&lt;/code&gt;，确保&lt;code&gt;const语义&lt;/code&gt;。
+&lt;code&gt;TMP338&lt;/code&gt;就是这个Table对应的数据&lt;/p&gt;
+
+&lt;p&gt;上面可见&lt;code&gt;memset&lt;/code&gt;都执行了2次，因此可能nim转换c代码时没做全局优化，而是这个优化的过程由C语言编译器来保证了。&lt;/p&gt;
+
+&lt;p&gt;如此复制多次能不慢么!&lt;/p&gt;
+
+&lt;p&gt;可以看看如下代码的翻译结果,确实是每一个涉及 &lt;code&gt;CONST_DICT&lt;/code&gt; 的操作都重新创建了一个新的备份。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;proc func_const(i : int) : int =
+  if CONST_DICT.hasKey(i):
+    return CONST_DICT[i]
+
+  if CONST_DICT.hasKey(i+1):
+    return CONST_DICT[i]
+  return i
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Let&lt;/code&gt;部分&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+        NIM_BOOL LOC3;
+        LOC3 = 0;
+        LOC3 = haskey_136519(Letdict_136473, i);   //直接就查询了
+        if (!LOC3) goto LA4;
+        nimln(22, &amp;quot;a.nim&amp;quot;);
+        result = HEX5BHEX5D_136545(Letdict_136473, i);
+        goto BeforeRet;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Letdict_136473&lt;/code&gt; 在一个独立的init过程终被初始化&lt;code&gt;totable_136031(TMP335, 8, (&amp;amp;Letdict_136473));&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;这里 HEX5BHEX5D_136545 返回的就是它的值。
+由于编译器对&lt;code&gt;Let&lt;/code&gt;的语义保证和检查，初始化后不纯在对这个变量的修改操作。因此就放心的直接返回结果了。
+所以性能反而最高&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;var&lt;/code&gt;部分&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+        NIM_BOOL LOC3;
+        NI* LOC6;
+        LOC3 = 0;
+        LOC3 = haskey_136519(Vardict_136513, i);
+        if (!LOC3) goto LA4;
+        nimln(27, &amp;quot;a.nim&amp;quot;);
+        LOC6 = 0;
+        LOC6 = HEX5BHEX5D_136657((&amp;amp;Vardict_136513), i);
+        result = (*LOC6);
+        goto BeforeRet;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Vardict_136513&lt;/code&gt; 在一个独立的init过程终被初始化&lt;code&gt;totable_136031(TMP335, 8, (&amp;amp;Vardict_136513));&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;因为&lt;code&gt;var&lt;/code&gt;的原语，所以必须返回的是一个指针了。
+因此&lt;code&gt;HEX5BHEX5D_136657&lt;/code&gt;返回的是一个指针的指针,因此必须 &lt;code&gt;(*)&lt;/code&gt;了。&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
