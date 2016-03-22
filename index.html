@@ -44,6 +44,71 @@
 				
 		<div class="row">
 			<div class="col-md-offset-1 col-md-10">
+				<h3><a href="http://d-l.github.io/post/compile_nim_to_library_python/">在Python中调用编译Nim的so/dll文件</a></h3>
+					<span class="label label-primary">Tue Mar 22, 2016</span> in 
+					 using tags 			 
+					
+				</small>
+			</div>
+		</div>	
+		<div class="row">
+			<div class="col-md-offset-1 col-md-10">
+				<br> 
+				
+
+<h2 id="由来:7fff3adb2bef248f084e8ae859a1cfe5">由来</h2>
+
+<p>Python的性能还是有些欠缺的，因此目前可行的方案是用<code>Nim</code>将耗时部分重新编写。
+并编译为<code>so/dll</code>以供Python调用</p>
+
+<h2 id="nim编写so-dll注意点:7fff3adb2bef248f084e8ae859a1cfe5">Nim编写so/dll注意点</h2>
+
+<p>需要提供给python调用的函数必须用 <code>{. exportc dynlib .}</code> 修饰一下
+这样Nim编译器就不会在导出符号上添加类型<code>_xxx</code>的小尾巴了.</p>
+
+<h2 id="python-注意点:7fff3adb2bef248f084e8ae859a1cfe5">Python 注意点</h2>
+
+<p>依旧采用 <code>ctypes</code> 来进行导入</p>
+
+<p>只有一个技巧点:
+比如 Nim中 <code>seq</code> 的导出
+seq[ATYPE] 会被翻译为如下形式的.c</p>
+
+<pre><code>  struct Item{
+    Ni  len; //对应 c_longlong 在64bit下
+    Ni  reserved: //c_longlong
+    ATYPE data[一个数字]; //ATYPE的数组
+  }
+</code></pre>
+
+<p>py中对于可变数组类无法翻译，因此上述的<code>data</code>不好设定。
+指定为一个很大的数组是不合适的。
+比如我们的数据这个数字可能需要几万个，因此必须变通
+我的方法如下:</p>
+
+<pre><code>class Item(Structure):
+  _fields_ =[
+    (&quot;len&quot;,c_longlong), #64位
+    (&quot;reserved&quot;,c_longlong),
+  ]
+  def rebuild(self):
+    self.data = cast(byref(self,sizeof(c_longlong)*2),POINTER(ATYPE))
+</code></pre>
+
+<p>这样直接用内存指向的方式来强制转换,其中<code>cast</code>和<code>byref</code>都可以参看python中的<code>ctypes</code>说明</p>
+
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12">
+				<hr>
+			</div>
+		</div>
+	
+		
+				
+		<div class="row">
+			<div class="col-md-offset-1 col-md-10">
 				<h3><a href="http://d-l.github.io/post/estp/">estp性能调优</a></h3>
 					<span class="label label-primary">Mon Mar 21, 2016</span> in 
 					 using tags 			 

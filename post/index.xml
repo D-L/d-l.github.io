@@ -6,8 +6,59 @@
     <description>Recent content in Posts on 唯有 Nim/Python 加吐槽</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 21 Mar 2016 19:42:43 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 22 Mar 2016 22:29:49 +0800</lastBuildDate>
     <atom:link href="http://d-l.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>在Python中调用编译Nim的so/dll文件</title>
+      <link>http://d-l.github.io/post/compile_nim_to_library_python/</link>
+      <pubDate>Tue, 22 Mar 2016 22:29:49 +0800</pubDate>
+      
+      <guid>http://d-l.github.io/post/compile_nim_to_library_python/</guid>
+      <description>
+
+&lt;h2 id=&#34;由来:7fff3adb2bef248f084e8ae859a1cfe5&#34;&gt;由来&lt;/h2&gt;
+
+&lt;p&gt;Python的性能还是有些欠缺的，因此目前可行的方案是用&lt;code&gt;Nim&lt;/code&gt;将耗时部分重新编写。
+并编译为&lt;code&gt;so/dll&lt;/code&gt;以供Python调用&lt;/p&gt;
+
+&lt;h2 id=&#34;nim编写so-dll注意点:7fff3adb2bef248f084e8ae859a1cfe5&#34;&gt;Nim编写so/dll注意点&lt;/h2&gt;
+
+&lt;p&gt;需要提供给python调用的函数必须用 &lt;code&gt;{. exportc dynlib .}&lt;/code&gt; 修饰一下
+这样Nim编译器就不会在导出符号上添加类型&lt;code&gt;_xxx&lt;/code&gt;的小尾巴了.&lt;/p&gt;
+
+&lt;h2 id=&#34;python-注意点:7fff3adb2bef248f084e8ae859a1cfe5&#34;&gt;Python 注意点&lt;/h2&gt;
+
+&lt;p&gt;依旧采用 &lt;code&gt;ctypes&lt;/code&gt; 来进行导入&lt;/p&gt;
+
+&lt;p&gt;只有一个技巧点:
+比如 Nim中 &lt;code&gt;seq&lt;/code&gt; 的导出
+seq[ATYPE] 会被翻译为如下形式的.c&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  struct Item{
+    Ni  len; //对应 c_longlong 在64bit下
+    Ni  reserved: //c_longlong
+    ATYPE data[一个数字]; //ATYPE的数组
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;py中对于可变数组类无法翻译，因此上述的&lt;code&gt;data&lt;/code&gt;不好设定。
+指定为一个很大的数组是不合适的。
+比如我们的数据这个数字可能需要几万个，因此必须变通
+我的方法如下:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class Item(Structure):
+  _fields_ =[
+    (&amp;quot;len&amp;quot;,c_longlong), #64位
+    (&amp;quot;reserved&amp;quot;,c_longlong),
+  ]
+  def rebuild(self):
+    self.data = cast(byref(self,sizeof(c_longlong)*2),POINTER(ATYPE))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这样直接用内存指向的方式来强制转换,其中&lt;code&gt;cast&lt;/code&gt;和&lt;code&gt;byref&lt;/code&gt;都可以参看python中的&lt;code&gt;ctypes&lt;/code&gt;说明&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>estp性能调优</title>
