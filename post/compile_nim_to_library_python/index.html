@@ -96,6 +96,11 @@ seq[ATYPE] 会被翻译为如下形式的.c</p>
 
 <p>这样直接用内存指向的方式来强制转换,其中<code>cast</code>和<code>byref</code>都可以参看python中的<code>ctypes</code>说明</p>
 
+<h3 id="坑:7fff3adb2bef248f084e8ae859a1cfe5">坑</h3>
+
+<p>在调用这个so的函数之前必须调用<code>NimMain()</code>函数，这样Nim有机会进行Nim系统初始化(比如Gc之类的)
+见<a href="http://nim-lang.org/docs/backends.html">Nim Backend Integration</a>的说明</p>
+
 		</div>
 	</div>
 	<div class="row">

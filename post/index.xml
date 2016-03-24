@@ -6,8 +6,40 @@
     <description>Recent content in Posts on 唯有 Nim/Python 加吐槽</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 22 Mar 2016 22:29:49 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 25 Mar 2016 07:42:11 +0800</lastBuildDate>
     <atom:link href="http://d-l.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Nim陷阱</title>
+      <link>http://d-l.github.io/post/nim-pitfall-1/</link>
+      <pubDate>Fri, 25 Mar 2016 07:42:11 +0800</pubDate>
+      
+      <guid>http://d-l.github.io/post/nim-pitfall-1/</guid>
+      <description>
+
+&lt;h1 id=&#34;陷阱:d4006a79b2fb6f39e4c11a0a20031f0d&#34;&gt;陷阱&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;proc &lt;code&gt;del&lt;/code&gt;和&lt;code&gt;delete&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code&gt;proc del[T](x: var seq[T]; i: Natural) {.noSideEffect.}&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;deletes the item at index i by putting x[high(x)] into position i. This is an O(1) operation.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;var i = @[1,2,3,4,5]
+i.del(2) #=&amp;gt; @[1, 2, 5, 4]   Source
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;proc delete[T](x: var seq[T]; i: Natural) {.noSideEffect.}&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;deletes the item at index i by moving x[i+1..] by one position. This is an O(n) operation.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;var i = @[1,2,3,4,5]
+i.delete(2) #=&amp;gt; @[1, 2, 4, 5]   Source
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
     
     <item>
       <title>在Python中调用编译Nim的so/dll文件</title>
@@ -57,6 +89,11 @@ seq[ATYPE] 会被翻译为如下形式的.c&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;这样直接用内存指向的方式来强制转换,其中&lt;code&gt;cast&lt;/code&gt;和&lt;code&gt;byref&lt;/code&gt;都可以参看python中的&lt;code&gt;ctypes&lt;/code&gt;说明&lt;/p&gt;
+
+&lt;h3 id=&#34;坑:7fff3adb2bef248f084e8ae859a1cfe5&#34;&gt;坑&lt;/h3&gt;
+
+&lt;p&gt;在调用这个so的函数之前必须调用&lt;code&gt;NimMain()&lt;/code&gt;函数，这样Nim有机会进行Nim系统初始化(比如Gc之类的)
+见&lt;a href=&#34;http://nim-lang.org/docs/backends.html&#34;&gt;Nim Backend Integration&lt;/a&gt;的说明&lt;/p&gt;
 </description>
     </item>
     

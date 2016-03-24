@@ -8,7 +8,7 @@
     <meta name="keyword" content="">
     <link rel="shortcut icon" href="/img/favicon.ico">
 
-    <title>Posts</title>
+    <title>Nim陷阱</title>
 
  	
 	<link href="/css/journal.css" rel="stylesheet">
@@ -39,55 +39,46 @@
 			</div>
 		</div>
 	</div>
+
 <div class="container">	
 	<div class="row">
-		<div class="col-md-12 text-center">
-			<h3>Posts</h3>
-	    </div>
-    </div>
+		<div class="col-md-offset-1 col-md-10">
+			<h3>Nim陷阱</h3>
+				<span class="label label-primary">Fri Mar 25, 2016</span> in 
+				 using tags 			 
+				
+			</small>
+		</div>
+	</div>
 	<div class="row">
-		<div class="col-md-12">
-			<ul>
-			    
-			        <div class="row">
-	<div class="col-md-offset-2 col-md-6 col-md-offset-2 col-md-6">
-		<h4><a href="http://d-l.github.io/post/nim-pitfall-1/">Nim陷阱</a></h4>
+		<div class="col-md-offset-1 col-md-10">
+			<br>
+			
+
+<h1 id="陷阱:d4006a79b2fb6f39e4c11a0a20031f0d">陷阱</h1>
+
+<ul>
+<li>proc <code>del</code>和<code>delete</code></li>
+</ul>
+
+<p><code>proc del[T](x: var seq[T]; i: Natural) {.noSideEffect.}</code></p>
+
+<p>deletes the item at index i by putting x[high(x)] into position i. This is an O(1) operation.</p>
+
+<pre><code>var i = @[1,2,3,4,5]
+i.del(2) #=&gt; @[1, 2, 5, 4]   Source
+</code></pre>
+
+<p><code>proc delete[T](x: var seq[T]; i: Natural) {.noSideEffect.}</code></p>
+
+<p>deletes the item at index i by moving x[i+1..] by one position. This is an O(n) operation.</p>
+
+<pre><code>var i = @[1,2,3,4,5]
+i.delete(2) #=&gt; @[1, 2, 4, 5]   Source
+</code></pre>
+
+		</div>
 	</div>
-	<div class="col-md-4 col-md-4">
-		<h4>Fri Mar 25, 2016</h4>
-	</div>
-</div>
-			    
-			        <div class="row">
-	<div class="col-md-offset-2 col-md-6 col-md-offset-2 col-md-6">
-		<h4><a href="http://d-l.github.io/post/compile_nim_to_library_python/">在Python中调用编译Nim的so/dll文件</a></h4>
-	</div>
-	<div class="col-md-4 col-md-4">
-		<h4>Tue Mar 22, 2016</h4>
-	</div>
-</div>
-			    
-			        <div class="row">
-	<div class="col-md-offset-2 col-md-6 col-md-offset-2 col-md-6">
-		<h4><a href="http://d-l.github.io/post/estp/">estp性能调优</a></h4>
-	</div>
-	<div class="col-md-4 col-md-4">
-		<h4>Mon Mar 21, 2016</h4>
-	</div>
-</div>
-			    
-			        <div class="row">
-	<div class="col-md-offset-2 col-md-6 col-md-offset-2 col-md-6">
-		<h4><a href="http://d-l.github.io/post/const_let_var/">Nim中Const、Let、Var定义的Table变量的差异</a></h4>
-	</div>
-	<div class="col-md-4 col-md-4">
-		<h4>Mon Mar 21, 2016</h4>
-	</div>
-</div>
-			    
-		    </ul>
-	    </div>
-    </div>
 	<div class="row">
 		<div class="col-md-12">
 			<hr>

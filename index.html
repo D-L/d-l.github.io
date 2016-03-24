@@ -44,6 +44,52 @@
 				
 		<div class="row">
 			<div class="col-md-offset-1 col-md-10">
+				<h3><a href="http://d-l.github.io/post/nim-pitfall-1/">Nim陷阱</a></h3>
+					<span class="label label-primary">Fri Mar 25, 2016</span> in 
+					 using tags 			 
+					
+				</small>
+			</div>
+		</div>	
+		<div class="row">
+			<div class="col-md-offset-1 col-md-10">
+				<br> 
+				
+
+<h1 id="陷阱:d4006a79b2fb6f39e4c11a0a20031f0d">陷阱</h1>
+
+<ul>
+<li>proc <code>del</code>和<code>delete</code></li>
+</ul>
+
+<p><code>proc del[T](x: var seq[T]; i: Natural) {.noSideEffect.}</code></p>
+
+<p>deletes the item at index i by putting x[high(x)] into position i. This is an O(1) operation.</p>
+
+<pre><code>var i = @[1,2,3,4,5]
+i.del(2) #=&gt; @[1, 2, 5, 4]   Source
+</code></pre>
+
+<p><code>proc delete[T](x: var seq[T]; i: Natural) {.noSideEffect.}</code></p>
+
+<p>deletes the item at index i by moving x[i+1..] by one position. This is an O(n) operation.</p>
+
+<pre><code>var i = @[1,2,3,4,5]
+i.delete(2) #=&gt; @[1, 2, 4, 5]   Source
+</code></pre>
+
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12">
+				<hr>
+			</div>
+		</div>
+	
+		
+				
+		<div class="row">
+			<div class="col-md-offset-1 col-md-10">
 				<h3><a href="http://d-l.github.io/post/compile_nim_to_library_python/">在Python中调用编译Nim的so/dll文件</a></h3>
 					<span class="label label-primary">Tue Mar 22, 2016</span> in 
 					 using tags 			 
@@ -96,6 +142,11 @@ seq[ATYPE] 会被翻译为如下形式的.c</p>
 </code></pre>
 
 <p>这样直接用内存指向的方式来强制转换,其中<code>cast</code>和<code>byref</code>都可以参看python中的<code>ctypes</code>说明</p>
+
+<h3 id="坑:7fff3adb2bef248f084e8ae859a1cfe5">坑</h3>
+
+<p>在调用这个so的函数之前必须调用<code>NimMain()</code>函数，这样Nim有机会进行Nim系统初始化(比如Gc之类的)
+见<a href="http://nim-lang.org/docs/backends.html">Nim Backend Integration</a>的说明</p>
 
 			</div>
 		</div>
