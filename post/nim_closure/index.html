@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-US" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keyword" content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>nim_closure闭包</title>
+
+ 	
+	<link href="/css/journal.css" rel="stylesheet">
+
+ 	
+ 	<link href="/css/style.css" rel="stylesheet">
+</head>
+<body lang="en">
+	<div class="container">
+		<div class="row">
+			<div class="navbar navbar-default navbar-inverse" role="navigation">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="http://d-l.github.io/">唯有 Nim/Python 加吐槽</a> 
+				</div>
+				<div class="navbar-collapse collapse navbar-responsive-collapse">
+					<ul class="nav navbar-nav navbar-right">
+						<li><a href="http://d-l.github.io/">Home</a></li>
+						<li><a href="http://d-l.github.io//page/about/">About</a></li>
+						<li><a href="http://d-l.github.io//page/resume/">Resume</a></li>
+						<li><a href="http://d-l.github.io//post/">Blog</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+<div class="container">	
+	<div class="row">
+		<div class="col-md-offset-1 col-md-10">
+			<h3>nim_closure闭包</h3>
+				<span class="label label-primary">Fri Jul 29, 2016</span> in 
+				 using tags 			 
+				
+			</small>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-offset-1 col-md-10">
+			<br>
+			
+
+<p>Nim中的闭包</p>
+
+<p>比较下下面的两段代码的不同:</p>
+
+<p><code>a.nim</code></p>
+
+<pre><code>proc test(b : seq[int]) =
+  proc inner() =
+    if len(b) &gt; 10:
+      echo &quot;&gt;10&quot;
+    else:
+      echo &quot;&lt;10&quot;
+  inner()
+
+var a = @[1,2,3,4]
+test(a)
+</code></pre>
+
+<p><code>b.nim</code></p>
+
+<pre><code>proc test(b : seq[int]) =
+  proc inner(c : seq[int]) =
+    if len(c) &gt; 10:
+      echo &quot;&gt;10&quot;
+    else:
+      echo &quot;&lt;10&quot;
+  inner(b)
+
+var a = @[1,2,3,4]
+test(a)
+</code></pre>
+
+<p>不同在于如何引用closure外的变量:
+分别翻译回来的 <code>.c</code> 文件如下</p>
+
+<p><code>a.c</code></p>
+
+<pre><code>N_CLOSURE(void, inner_95007_3017651)(void* ClEnv) {
+	TY95022* HEX3Aenvp_95025_3017651;
+	nimfr(&quot;inner&quot;, &quot;a.nim&quot;)
+	HEX3Aenvp_95025_3017651 = (TY95022*) ClEnv;
+	nimln(3, &quot;a.nim&quot;);
+	{
+		nimln(351, &quot;system.nim&quot;);
+		nimln(3, &quot;a.nim&quot;);
+		if (!(((NI) 10) &lt; ((*HEX3Aenvp_95025_3017651).b95006 ? (*HEX3Aenvp_95025_3017651).b95006-&gt;Sup.len : 0))) goto LA3;
+		nimln(4, &quot;a.nim&quot;);
+		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP144)? (((NimStringDesc*) &amp;TMP144))-&gt;data:&quot;nil&quot;);
+		fflush(stdout);
+	}
+	goto LA1;
+	LA3: ;
+	{
+		nimln(6, &quot;a.nim&quot;);
+		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP145)? (((NimStringDesc*) &amp;TMP145))-&gt;data:&quot;nil&quot;);
+		fflush(stdout);
+	}
+	LA1: ;
+	popFrame();
+}
+
+N_NIMCALL(void, test_95003_3017651)(TY95005* b0) {
+	TY95022* HEX3Aenv_95027_3017651;
+	TY95008 LOC1;
+	nimfr(&quot;test&quot;, &quot;a.nim&quot;)
+	HEX3Aenv_95027_3017651 = (TY95022*)0;
+	nimln(198, &quot;system.nim&quot;);
+	#新创建了一个Seq，这样inner函数环境就是这个
+	HEX3Aenv_95027_3017651 = (TY95022*) newObj((&amp;NTI95021), sizeof(TY95022));
+	nimln(1, &quot;a.nim&quot;);
+	genericSeqAssign((&amp;(*HEX3Aenv_95027_3017651).b95006), b0, (&amp;NTI95005));
+	nimln(7, &quot;a.nim&quot;);
+	memset((void*)(&amp;LOC1), 0, sizeof(LOC1));
+	LOC1.ClPrc = inner_95007_3017651; LOC1.ClEnv = HEX3Aenv_95027_3017651;
+	LOC1.ClEnv? LOC1.ClPrc(LOC1.ClEnv):((TMP146)(LOC1.ClPrc))();
+	popFrame();
+}
+</code></pre>
+
+<p><code>b.c</code></p>
+
+<pre><code>只是个内部函数而已，都可以单纯的提出来了的，因为没有引用外部的变量
+N_NIMCALL(void, inner_95007_3017651)(TY95005* c0) {
+	nimfr(&quot;inner&quot;, &quot;a.nim&quot;)
+	nimln(3, &quot;a.nim&quot;);
+	{
+		nimln(351, &quot;system.nim&quot;);
+		nimln(3, &quot;a.nim&quot;);
+		if (!(((NI) 10) &lt; (c0 ? c0-&gt;Sup.len : 0))) goto LA3;
+		nimln(4, &quot;a.nim&quot;);
+		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP141)? (((NimStringDesc*) &amp;TMP141))-&gt;data:&quot;nil&quot;);
+		fflush(stdout);
+	}
+	goto LA1;
+	LA3: ;
+	{
+		nimln(6, &quot;a.nim&quot;);
+		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP142)? (((NimStringDesc*) &amp;TMP142))-&gt;data:&quot;nil&quot;);
+		fflush(stdout);
+	}
+	LA1: ;
+	popFrame();
+}
+
+N_NIMCALL(void, test_95003_3017651)(TY95005* b0) {
+	nimfr(&quot;test&quot;, &quot;a.nim&quot;)
+	nimln(7, &quot;a.nim&quot;);
+	inner_95007_3017651(b0);
+	popFrame();
+}
+</code></pre>
+
+<p>我们改变一下</p>
+
+<p><code>c.nim</code></p>
+
+<pre><code>proc test(b : seq[int]) =
+  proc inner(c : seq[int]) =
+    if len(c) &gt; len(b):
+      echo &quot;&gt;10&quot;
+    else:
+      echo &quot;&lt;10&quot;
+  inner(b)
+
+var a = @[1,2,3,4]
+test(a)
+</code></pre>
+
+<p>又变成 Closure 了</p>
+
+<pre><code>N_CLOSURE(void, inner_95007_3017653)(TY95005* c0, void* ClEnv) {
+	TY95032* HEX3Aenvp_95035_3017653;
+	nimfr(&quot;inner&quot;, &quot;c.nim&quot;)
+	HEX3Aenvp_95035_3017653 = (TY95032*) ClEnv;
+	nimln(3, &quot;c.nim&quot;);
+	{
+		nimln(351, &quot;system.nim&quot;);
+		nimln(3, &quot;c.nim&quot;);
+		if (!(((*HEX3Aenvp_95035_3017653).b95006 ? (*HEX3Aenvp_95035_3017653).b95006-&gt;Sup.len : 0) &lt; (c0 ? c0-&gt;Sup.len : 0))) goto LA3;
+		nimln(4, &quot;c.nim&quot;);
+		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP144)? (((NimStringDesc*) &amp;TMP144))-&gt;data:&quot;nil&quot;);
+		fflush(stdout);
+	}
+	goto LA1;
+	LA3: ;
+	{
+		nimln(6, &quot;c.nim&quot;);
+		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP145)? (((NimStringDesc*) &amp;TMP145))-&gt;data:&quot;nil&quot;);
+		fflush(stdout);
+	}
+	LA1: ;
+	popFrame();
+}
+
+N_NIMCALL(void, test_95003_3017653)(TY95005* b0) {
+	TY95032* HEX3Aenv_95037_3017653;
+	TY95008 LOC1;
+	nimfr(&quot;test&quot;, &quot;c.nim&quot;)
+	HEX3Aenv_95037_3017653 = (TY95032*)0;
+	nimln(198, &quot;system.nim&quot;);
+	HEX3Aenv_95037_3017653 = (TY95032*) newObj((&amp;NTI95031), sizeof(TY95032));
+	nimln(1, &quot;c.nim&quot;);
+	genericSeqAssign((&amp;(*HEX3Aenv_95037_3017653).b95006), b0, (&amp;NTI95005));
+	nimln(7, &quot;c.nim&quot;);
+	memset((void*)(&amp;LOC1), 0, sizeof(LOC1));
+	LOC1.ClPrc = inner_95007_3017653; LOC1.ClEnv = HEX3Aenv_95037_3017653;
+	LOC1.ClEnv? LOC1.ClPrc((*HEX3Aenv_95037_3017653).b95006, LOC1.ClEnv):((TMP146)(LOC1.ClPrc))((*HEX3Aenv_95037_3017653).b95006);
+	popFrame();
+}
+</code></pre>
+
+<h3 id="结语:9d9507952061d5c98962ee556c384fa2">结语:</h3>
+
+<p>由此也可以看出　在不需要的时候　尽量少用<code>Closure</code> 性能差异太大了的.
+特别是传入的参数越庞大越复杂就性能越差!</p>
+
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12">
+			<hr>
+		</div>
+	</div>	
+</div>
+
+  <div class="container">
+    <div class="row col-md-12">
+          <footer>
+            <div>
+                <p>
+                    &copy; 2014  ~ Powered By <a href="http://hugo.spf13.com">Hugo</a>
+                </p>
+            </div>
+            </footer>
+        </div>
+    </div>
+
+    
+    
+    <script src="/js/jquery-min-2.1.1.js"></script>
+    <script src="/js/bootstrap.min-3.1.1.js"></script>
+    </body>
+</html>
