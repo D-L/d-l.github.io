@@ -8,7 +8,7 @@
     <meta name="keyword" content="">
     <link rel="shortcut icon" href="/img/favicon.ico">
 
-    <title>Posts</title>
+    <title>Nim Profile检测</title>
 
  	
 	<link href="/css/journal.css" rel="stylesheet">
@@ -39,64 +39,38 @@
 			</div>
 		</div>
 	</div>
+
 <div class="container">	
 	<div class="row">
-		<div class="col-md-12 text-center">
-			<h3>Posts</h3>
-	    </div>
-    </div>
+		<div class="col-md-offset-1 col-md-10">
+			<h3>Nim Profile检测</h3>
+				<span class="label label-primary">Fri Jul 29, 2016</span> in 
+				 using tags 			 
+				
+			</small>
+		</div>
+	</div>
 	<div class="row">
-		<div class="col-md-12">
-			<ul>
-			    
-			        <div class="row">
-	<div class="col-md-offset-2 col-md-6 col-md-offset-2 col-md-6">
-		<h4><a href="http://d-l.github.io/post/nim_debug/">Nim Profile检测</a></h4>
+		<div class="col-md-offset-1 col-md-10">
+			<br>
+			<p><a href="../estp/">前面</a>讲过Nim有内置的ESTP性能检查器</p>
+
+<p>不过你懂的，不好用。还是得上<code>gprof</code></p>
+
+<p>同时在编译的时候，我也想知道具体的编译参数是啥。</p>
+
+<p>因此，直接的取代了默认的<code>gcc</code>链接.</p>
+
+<p>在我的Ubuntu 16.04上是这样的
+<img src="/img/replace_gcc.png" alt="替换gcc" /></p>
+
+<p>这样可以轻易的在gcc.sh中增加我需要的参数了如:
+<img src="/img/replace_gcc_pg.png" alt="gcc增加pg" /></p>
+
+<p>这样编译出来的程序　可以直接的使用<code>gprof</code>来观看最终的产出了，比ESTP直观高效多了。</p>
+
+		</div>
 	</div>
-	<div class="col-md-4 col-md-4">
-		<h4>Fri Jul 29, 2016</h4>
-	</div>
-</div>
-			    
-			        <div class="row">
-	<div class="col-md-offset-2 col-md-6 col-md-offset-2 col-md-6">
-		<h4><a href="http://d-l.github.io/post/nim-pitfall-1/">Nim陷阱</a></h4>
-	</div>
-	<div class="col-md-4 col-md-4">
-		<h4>Fri Mar 25, 2016</h4>
-	</div>
-</div>
-			    
-			        <div class="row">
-	<div class="col-md-offset-2 col-md-6 col-md-offset-2 col-md-6">
-		<h4><a href="http://d-l.github.io/post/compile_nim_to_library_python/">在Python中调用编译Nim的so/dll文件</a></h4>
-	</div>
-	<div class="col-md-4 col-md-4">
-		<h4>Tue Mar 22, 2016</h4>
-	</div>
-</div>
-			    
-			        <div class="row">
-	<div class="col-md-offset-2 col-md-6 col-md-offset-2 col-md-6">
-		<h4><a href="http://d-l.github.io/post/estp/">estp性能调优</a></h4>
-	</div>
-	<div class="col-md-4 col-md-4">
-		<h4>Mon Mar 21, 2016</h4>
-	</div>
-</div>
-			    
-			        <div class="row">
-	<div class="col-md-offset-2 col-md-6 col-md-offset-2 col-md-6">
-		<h4><a href="http://d-l.github.io/post/const_let_var/">Nim中Const、Let、Var定义的Table变量的差异</a></h4>
-	</div>
-	<div class="col-md-4 col-md-4">
-		<h4>Mon Mar 21, 2016</h4>
-	</div>
-</div>
-			    
-		    </ul>
-	    </div>
-    </div>
 	<div class="row">
 		<div class="col-md-12">
 			<hr>

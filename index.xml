@@ -1,13 +1,37 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>唯有 Nim/Python 加吐槽</title>
-    <link>http://d-l.github.io/</link>
-    <description>Recent content on 唯有 Nim/Python 加吐槽</description>
+    <title>Posts on 唯有 Nim/Python 加吐槽</title>
+    <link>http://d-l.github.io/post/</link>
+    <description>Recent content in Posts on 唯有 Nim/Python 加吐槽</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 25 Mar 2016 07:42:11 +0800</lastBuildDate>
-    <atom:link href="http://d-l.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 29 Jul 2016 19:31:45 +0800</lastBuildDate>
+    <atom:link href="http://d-l.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Nim Profile检测</title>
+      <link>http://d-l.github.io/post/nim_debug/</link>
+      <pubDate>Fri, 29 Jul 2016 19:31:45 +0800</pubDate>
+      
+      <guid>http://d-l.github.io/post/nim_debug/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;../estp/&#34;&gt;前面&lt;/a&gt;讲过Nim有内置的ESTP性能检查器&lt;/p&gt;
+
+&lt;p&gt;不过你懂的，不好用。还是得上&lt;code&gt;gprof&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;同时在编译的时候，我也想知道具体的编译参数是啥。&lt;/p&gt;
+
+&lt;p&gt;因此，直接的取代了默认的&lt;code&gt;gcc&lt;/code&gt;链接.&lt;/p&gt;
+
+&lt;p&gt;在我的Ubuntu 16.04上是这样的
+&lt;img src=&#34;http://d-l.github.io/img/replace_gcc.png&#34; alt=&#34;替换gcc&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这样可以轻易的在gcc.sh中增加我需要的参数了如:
+&lt;img src=&#34;http://d-l.github.io/img/replace_gcc_pg.png&#34; alt=&#34;gcc增加pg&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这样编译出来的程序　可以直接的使用&lt;code&gt;gprof&lt;/code&gt;来观看最终的产出了，比ESTP直观高效多了。&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Nim陷阱</title>
