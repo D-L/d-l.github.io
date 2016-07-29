@@ -92,42 +92,45 @@ test(a)
 
 <p><code>a.c</code></p>
 
-<pre><code>N_CLOSURE(void, inner_95007_3017651)(void* ClEnv) {
-	TY95022* HEX3Aenvp_95025_3017651;
-	nimfr(&quot;inner&quot;, &quot;a.nim&quot;)
-	HEX3Aenvp_95025_3017651 = (TY95022*) ClEnv;
-	nimln(3, &quot;a.nim&quot;);
-	{
-		nimln(351, &quot;system.nim&quot;);
-		nimln(3, &quot;a.nim&quot;);
-		if (!(((NI) 10) &lt; ((*HEX3Aenvp_95025_3017651).b95006 ? (*HEX3Aenvp_95025_3017651).b95006-&gt;Sup.len : 0))) goto LA3;
-		nimln(4, &quot;a.nim&quot;);
-		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP144)? (((NimStringDesc*) &amp;TMP144))-&gt;data:&quot;nil&quot;);
-		fflush(stdout);
-	}
-	goto LA1;
-	LA3: ;
-	{
-		nimln(6, &quot;a.nim&quot;);
-		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP145)? (((NimStringDesc*) &amp;TMP145))-&gt;data:&quot;nil&quot;);
-		fflush(stdout);
-	}
-	LA1: ;
-	popFrame();
+<pre><code>#是N_CLOSURE,带有环境变量的了,具体的运行函数
+N_CLOSURE(void, inner_95007_3017651)(void* ClEnv) {
+  ...省略了...简单调用...
 }
+
+#这就是一个典型的SEQ头部
+struct  TGenericSeq  {
+  NI len;               #SEQ的使用的长度
+  NI reserved;          #已经分配空间的长度
+};
+
+#SEQ内容
+struct TY95022 {
+  TGenericSeq Sup;        #确定SEQ的长度
+  NI data[SEQ_DECL_SIZE]; #存放int类型的值,一个NI[]
+};
+
+typedef struct {
+  #确切的closure调用指针
+  #clPrc 指向closure函数入口
+  #clEnv 环境变量的拷贝指针
+  N_NIMCALL_PTR(void, ClPrc) (void* ClEnv);
+  void* ClEnv;   #指向Closure的环境变量
+} TY95008;
 
 N_NIMCALL(void, test_95003_3017651)(TY95005* b0) {
 	TY95022* HEX3Aenv_95027_3017651;
-	TY95008 LOC1;
+	TY95008 LOC1; #运行结构
 	nimfr(&quot;test&quot;, &quot;a.nim&quot;)
 	HEX3Aenv_95027_3017651 = (TY95022*)0;
 	nimln(198, &quot;system.nim&quot;);
 	#新创建了一个Seq，这样inner函数环境就是这个
 	HEX3Aenv_95027_3017651 = (TY95022*) newObj((&amp;NTI95021), sizeof(TY95022));
 	nimln(1, &quot;a.nim&quot;);
+    #浅层复制这个序列,如果序列传入的是负杂类型。!注意保重!
 	genericSeqAssign((&amp;(*HEX3Aenv_95027_3017651).b95006), b0, (&amp;NTI95005));
 	nimln(7, &quot;a.nim&quot;);
 	memset((void*)(&amp;LOC1), 0, sizeof(LOC1));
+    #设定相应的运行函数和环境变量
 	LOC1.ClPrc = inner_95007_3017651; LOC1.ClEnv = HEX3Aenv_95027_3017651;
 	LOC1.ClEnv? LOC1.ClPrc(LOC1.ClEnv):((TMP146)(LOC1.ClPrc))();
 	popFrame();
@@ -138,25 +141,7 @@ N_NIMCALL(void, test_95003_3017651)(TY95005* b0) {
 
 <pre><code>只是个内部函数而已，都可以单纯的提出来了的，因为没有引用外部的变量
 N_NIMCALL(void, inner_95007_3017651)(TY95005* c0) {
-	nimfr(&quot;inner&quot;, &quot;a.nim&quot;)
-	nimln(3, &quot;a.nim&quot;);
-	{
-		nimln(351, &quot;system.nim&quot;);
-		nimln(3, &quot;a.nim&quot;);
-		if (!(((NI) 10) &lt; (c0 ? c0-&gt;Sup.len : 0))) goto LA3;
-		nimln(4, &quot;a.nim&quot;);
-		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP141)? (((NimStringDesc*) &amp;TMP141))-&gt;data:&quot;nil&quot;);
-		fflush(stdout);
-	}
-	goto LA1;
-	LA3: ;
-	{
-		nimln(6, &quot;a.nim&quot;);
-		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP142)? (((NimStringDesc*) &amp;TMP142))-&gt;data:&quot;nil&quot;);
-		fflush(stdout);
-	}
-	LA1: ;
-	popFrame();
+  ..直接传参...
 }
 
 N_NIMCALL(void, test_95003_3017651)(TY95005* b0) {
@@ -186,27 +171,7 @@ test(a)
 <p>又变成 Closure 了</p>
 
 <pre><code>N_CLOSURE(void, inner_95007_3017653)(TY95005* c0, void* ClEnv) {
-	TY95032* HEX3Aenvp_95035_3017653;
-	nimfr(&quot;inner&quot;, &quot;c.nim&quot;)
-	HEX3Aenvp_95035_3017653 = (TY95032*) ClEnv;
-	nimln(3, &quot;c.nim&quot;);
-	{
-		nimln(351, &quot;system.nim&quot;);
-		nimln(3, &quot;c.nim&quot;);
-		if (!(((*HEX3Aenvp_95035_3017653).b95006 ? (*HEX3Aenvp_95035_3017653).b95006-&gt;Sup.len : 0) &lt; (c0 ? c0-&gt;Sup.len : 0))) goto LA3;
-		nimln(4, &quot;c.nim&quot;);
-		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP144)? (((NimStringDesc*) &amp;TMP144))-&gt;data:&quot;nil&quot;);
-		fflush(stdout);
-	}
-	goto LA1;
-	LA3: ;
-	{
-		nimln(6, &quot;c.nim&quot;);
-		printf(&quot;%s\012&quot;, ((NimStringDesc*) &amp;TMP145)? (((NimStringDesc*) &amp;TMP145))-&gt;data:&quot;nil&quot;);
-		fflush(stdout);
-	}
-	LA1: ;
-	popFrame();
+   ...根据传入的参数和环境变量执行...
 }
 
 N_NIMCALL(void, test_95003_3017653)(TY95005* b0) {
@@ -217,6 +182,7 @@ N_NIMCALL(void, test_95003_3017653)(TY95005* b0) {
 	nimln(198, &quot;system.nim&quot;);
 	HEX3Aenv_95037_3017653 = (TY95032*) newObj((&amp;NTI95031), sizeof(TY95032));
 	nimln(1, &quot;c.nim&quot;);
+    #浅层拷贝
 	genericSeqAssign((&amp;(*HEX3Aenv_95037_3017653).b95006), b0, (&amp;NTI95005));
 	nimln(7, &quot;c.nim&quot;);
 	memset((void*)(&amp;LOC1), 0, sizeof(LOC1));
